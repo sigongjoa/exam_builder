@@ -1,0 +1,22 @@
+
+=== Phase 1 API Test Results ===
+Total: 16 | PASS: 16 | FAIL: 0
+
+[PASS] GET /api/curriculum/subjects (19ms) 
+[PASS] GET /api/curriculum?subject=중1수학 (4ms) 
+[PASS] GET /api/curriculum/tree (3ms) 
+[PASS] POST /api/students (56ms) 
+[PASS] GET /api/students (4ms) 
+[PASS] PUT /api/students/1 (3ms) 
+[PASS] POST /api/students/1/conditions (2ms) 
+[PASS] GET /api/students/1 (3ms) 
+[PASS] POST /api/problems (2ms) 
+[PASS] GET /api/problems (3ms) 
+[PASS] GET /api/problems?subject=중1수학 (2ms) 
+[PASS] PUT /api/problems/2/status (2ms) 
+[PASS] POST /api/exams (3ms) 
+[PASS] GET /api/exams (2ms) 
+[PASS] GET /api/exams/2 (2ms) 
+[PASS] GET /api/pdf/2?type=exam (11387ms) 
+
+16/16 tests passed
