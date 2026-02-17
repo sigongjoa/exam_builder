@@ -1,0 +1,16 @@
+=== Test 1: GET /api/problems?page=1&limit=5 ===
+total: 9940 page: 1 totalPages: 1988 returned: 5
+RESULT: PASS
+
+=== Test 2: GET /api/problems?search=소인수&page=1&limit=5 ===
+search total: 64 returned: 5
+RESULT: PASS
+
+=== Test 3: POST /api/exams/smart ===
+Request: {"title":"Phase3.5 테스트","chapter_codes":["1-1-1","1-1-2","1-2-1"],"total_count":10,"difficulty_ratio":{"1":40,"2":40,"3":20}}
+Response: {"id":6,"problem_count":10,"distribution":{"1":4,"2":4,"3":2}}
+RESULT: PASS (하4/중4/상2 = 40%/40%/20% 정확)
+
+=== Test 4: npm run build ===
+✓ built in 9.95s
+RESULT: PASS

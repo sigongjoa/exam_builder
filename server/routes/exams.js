@@ -60,6 +60,163 @@ const difficultyMap = {
   'advanced': 3,
 };
 
+// POST /api/exams/smart - Create an exam with smart problem selection
+router.post('/smart', (req, res) => {
+  try {
+    const {
+      title,
+      exam_type,
+      student_id,
+      subject,
+      chapter_codes,
+      total_count,
+      difficulty_ratio, // e.g., { '1': 40, '2': 40, '3': 20 }
+      type_ratio,       // e.g., { 'multiple_choice': 70, 'descriptive': 30 }
+    } = req.body;
+
+    // 1. Input validation
+    if (!title || !chapter_codes || !total_count) {
+      return res.status(400).json({ error: 'title, chapter_codes, and total_count are required.' });
+    }
+    if (!Array.isArray(chapter_codes) || chapter_codes.length === 0) {
+      return res.status(400).json({ error: 'chapter_codes must be a non-empty array.' });
+    }
+    if (typeof total_count !== 'number' || total_count <= 0) {
+        return res.status(400).json({ error: 'total_count must be a positive number.' });
+    }
+
+    // Default difficulty ratio (normalized later)
+    const effectiveDifficultyRatio = difficulty_ratio || { '1': 40, '2': 40, '3': 20 };
+    const difficultySum = Object.values(effectiveDifficultyRatio).reduce((sum, val) => sum + val, 0);
+
+    const difficultyCounts = {};
+    const actualDistribution = {};
+    let problemsToFetchTotal = 0;
+
+    // Calculate number of problems for each difficulty
+    for (const diff of ['1', '2', '3']) {
+      if (effectiveDifficultyRatio[diff]) {
+        const count = Math.round((effectiveDifficultyRatio[diff] / difficultySum) * total_count);
+        difficultyCounts[diff] = count;
+        problemsToFetchTotal += count;
+      } else {
+        difficultyCounts[diff] = 0;
+      }
+    }
+    
+    // Adjust total if rounding caused a mismatch
+    if (problemsToFetchTotal !== total_count) {
+        let diff = total_count - problemsToFetchTotal;
+        // Distribute remaining diff (can be positive or negative) to the highest ratio difficulty first.
+        // This ensures the total_count is met as closely as possible without generating negative counts.
+        const sortedDifficulties = Object.keys(effectiveDifficultyRatio).sort((a, b) => effectiveDifficultyRatio[b] - effectiveDifficultyRatio[a]);
+        for(let i = 0; i < Math.abs(diff); i++) {
+            const d = sortedDifficulties[i % sortedDifficulties.length];
+            difficultyCounts[d] += (diff > 0 ? 1 : -1);
+        }
+    }
+    
+    // Ensure no negative counts after adjustment
+    for (const diff of ['1', '2', '3']) {
+        if (difficultyCounts[diff] < 0) difficultyCounts[diff] = 0;
+    }
+
+
+    const transaction = db.transaction(() => {
+      // 2. Insert exam
+      const insertExamStmt = db.prepare(
+        'INSERT INTO exams (title, exam_type, student_id, total_points, created_at) VALUES (?, ?, ?, ?, datetime(\'now\'))'
+      );
+      const examResult = insertExamStmt.run(title, exam_type, student_id || null, 0); // total_points will be updated later
+      const examId = examResult.lastInsertRowid;
+
+      const problemIds = [];
+      let totalAssignedPoints = 0;
+      let actualProblemCount = 0;
+
+      for (const difficulty of ['1', '2', '3']) {
+        const numProblemsForDifficulty = difficultyCounts[difficulty];
+        if (numProblemsForDifficulty === 0) {
+            actualDistribution[difficulty] = 0;
+            continue;
+        }
+
+        let baseQuery = `
+          SELECT id, points, type FROM problems
+          WHERE status = 'approved'
+          AND difficulty = ?
+          AND chapter_code IN (${chapter_codes.map(() => '?').join(',')})
+        `;
+        const params = [difficulty, ...chapter_codes];
+
+        if (subject) {
+          baseQuery += ` AND subject = ?`;
+          params.push(subject);
+        }
+
+        let problemsForCurrentDifficulty = [];
+
+        if (type_ratio) {
+          const typeSum = Object.values(type_ratio).reduce((sum, val) => sum + val, 0);
+          const mcCount = Math.round((type_ratio['multiple_choice'] / typeSum) * numProblemsForDifficulty);
+          const descCount = numProblemsForDifficulty - mcCount; // remaining
+
+          if (mcCount > 0) {
+            const mcProblems = db.prepare(baseQuery + ` AND type = 'multiple_choice' ORDER BY RANDOM() LIMIT ?`).all(...params, mcCount);
+            problemsForCurrentDifficulty.push(...mcProblems);
+          }
+          if (descCount > 0) {
+            const descProblems = db.prepare(baseQuery + ` AND type = 'descriptive' ORDER BY RANDOM() LIMIT ?`).all(...params, descCount);
+            problemsForCurrentDifficulty.push(...descProblems);
+          }
+        } else {
+          // No type ratio, fetch any type
+          const allProblems = db.prepare(baseQuery + ` ORDER BY RANDOM() LIMIT ?`).all(...params, numProblemsForDifficulty);
+          problemsForCurrentDifficulty.push(...allProblems);
+        }
+        
+        // Shuffle problems collected for current difficulty to mix types if both were fetched
+        for (let i = problemsForCurrentDifficulty.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [problemsForCurrentDifficulty[i], problemsForCurrentDifficulty[j]] = [problemsForCurrentDifficulty[j], problemsForCurrentDifficulty[i]];
+        }
+
+        actualDistribution[difficulty] = problemsForCurrentDifficulty.length;
+        problemIds.push(...problemsForCurrentDifficulty);
+        actualProblemCount += problemsForCurrentDifficulty.length;
+      }
+
+      // 3. Insert into exam_problems
+      const insertExamProblemStmt = db.prepare(
+        'INSERT INTO exam_problems (exam_id, problem_id, sort_order, points) VALUES (?, ?, ?, ?)'
+      );
+      problemIds.forEach((p, i) => {
+        const problemPoints = p.points || 5; // Default points if not specified
+        insertExamProblemStmt.run(examId, p.id, i + 1, problemPoints);
+        totalAssignedPoints += problemPoints;
+      });
+
+      // Update total_points for the exam
+      const updateExamPointsStmt = db.prepare('UPDATE exams SET total_points = ? WHERE id = ?');
+      updateExamPointsStmt.run(totalAssignedPoints, examId);
+
+      return { examId, actualProblemCount, actualDistribution };
+    });
+
+    const { examId, actualProblemCount } = transaction();
+
+    res.status(201).json({
+      id: examId,
+      problem_count: actualProblemCount,
+      distribution: actualDistribution,
+    });
+
+  } catch (err) {
+    console.error('Error creating smart exam:', err);
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // POST /api/exams/auto - Create an exam automatically based on student profile
 router.post('/auto', (req, res) => {
   try {

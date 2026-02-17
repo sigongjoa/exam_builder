@@ -16,13 +16,19 @@ export default function ProblemBank() {
     difficulty: '',
     type: '',
   });
+  const [search, setSearch] = useState(''); // New state for search keyword
+  const [page, setPage] = useState(1); // New state for current page
+  const [total, setTotal] = useState(0); // New state for total problems
+  const [totalPages, setTotalPages] = useState(1); // New state for total pages
+  const limit = 20; // Problems per page
+
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
     fetchSubjects();
     fetchProblems();
-  }, [filters]); // Refetch problems when filters change
+  }, [filters, page]); // Refetch problems when filters or page change
 
   const fetchSubjects = async () => {
     try {
@@ -38,9 +44,26 @@ export default function ProblemBank() {
     setIsLoading(true);
     setError('');
     try {
-      const queryParams = new URLSearchParams(filters).toString();
-      const response = await axios.get(`${API_BASE_URL}/problems?${queryParams}`);
-      setProblems(response.data);
+      const queryParams = new URLSearchParams();
+      // Add filters, excluding empty values
+      Object.entries(filters).forEach(([key, value]) => {
+        if (value) {
+          queryParams.append(key, value);
+        }
+      });
+      // Add search, page, and limit
+      if (search) {
+        queryParams.append('search', search);
+      }
+      queryParams.append('page', page);
+      queryParams.append('limit', limit);
+
+      const response = await axios.get(`${API_BASE_URL}/problems?${queryParams.toString()}`);
+      setProblems(response.data.problems); // Adjust to new API response
+      setTotal(response.data.total); // Set total count
+      setPage(response.data.page); // Set current page from response
+      setTotalPages(response.data.totalPages); // Set total pages
+
     } catch (err) {
       console.error('Error fetching problems:', err);
       setError('문제 목록을 불러오는데 실패했습니다.');
@@ -52,6 +75,16 @@ export default function ProblemBank() {
   const handleFilterChange = (e) => {
     const { name, value } = e.target;
     setFilters(prev => ({ ...prev, [name]: value }));
+    setPage(1); // Reset page to 1 when filters change
+  };
+
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
+  };
+
+  const handleSearchSubmit = () => {
+    setPage(1); // Reset page to 1 when search is submitted
+    fetchProblems(); // Manually trigger fetch for search
   };
 
   const handleCardClick = (problemId) => {
@@ -115,6 +148,71 @@ export default function ProblemBank() {
     }
     return <span className={`px-2.5 py-0.5 rounded-full text-xs font-semibold ${colorClass}`}>{text}</span>;
   };
+
+  const renderPaginationButtons = () => {
+    const pageNumbers = [];
+    const maxPageButtons = 5; // Display max 5 page numbers at a time
+    let startPage = Math.max(1, page - Math.floor(maxPageButtons / 2));
+    let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
+
+    if (endPage - startPage + 1 < maxPageButtons) {
+        startPage = Math.max(1, endPage - maxPageButtons + 1);
+    }
+
+    if (startPage > 1) {
+        pageNumbers.push(
+            <button
+                key={1}
+                onClick={() => setPage(1)}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+                1
+            </button>
+        );
+        if (startPage > 2) {
+            pageNumbers.push(
+                <span key="ellipsis-start" className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                    ...
+                </span>
+            );
+        }
+    }
+
+    for (let i = startPage; i <= endPage; i++) {
+        pageNumbers.push(
+            <button
+                key={i}
+                onClick={() => setPage(i)}
+                className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium ${
+                    i === page ? 'bg-indigo-50 border-indigo-500 text-indigo-600' : 'bg-white text-gray-700 hover:bg-gray-50'
+                }`}
+            >
+                {i}
+            </button>
+        );
+    }
+
+    if (endPage < totalPages) {
+        if (endPage < totalPages - 1) {
+            pageNumbers.push(
+                <span key="ellipsis-end" className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                    ...
+                </span>
+            );
+        }
+        pageNumbers.push(
+            <button
+                key={totalPages}
+                onClick={() => setPage(totalPages)}
+                className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+            >
+                {totalPages}
+            </button>
+        );
+    }
+
+    return pageNumbers;
+};
 
 
   return (
@@ -195,10 +293,36 @@ export default function ProblemBank() {
               <option value="descriptive">서술형</option>
             </select>
           </div>
+          {/* Search Input */}
+          <div className="md:col-span-2 lg:col-span-1 flex items-end"> {/* Use items-end to align with other inputs */}
+            <input
+              type="text"
+              placeholder="문제 검색 (키워드 입력)..."
+              className="mt-1 block w-full pl-3 pr-3 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md shadow-sm"
+              value={search}
+              onChange={handleSearchChange}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter') {
+                  handleSearchSubmit();
+                }
+              }}
+            />
+            <button
+              onClick={handleSearchSubmit}
+              className="ml-2 px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 transition duration-150 ease-in-out"
+            >
+              검색
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* Problem List */}
+      {total > 0 && !isLoading && (
+        <div className="text-sm text-gray-600 mb-4">
+          총 {total.toLocaleString()}건 중 {(page - 1) * limit + 1}-{Math.min(page * limit, total)}
+        </div>
+      )}
+
       {isLoading ? (
         <div className="flex justify-center items-center h-40">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
@@ -207,39 +331,67 @@ export default function ProblemBank() {
       ) : problems.length === 0 ? (
         <p className="text-center text-gray-500 text-lg mt-10">필터에 해당하는 문제가 없습니다.</p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {problems.map(problem => (
-            <div
-              key={problem.id}
-              className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 hover:shadow-xl transition-shadow cursor-pointer"
-              onClick={() => handleCardClick(problem.id)}
-            >
-              <div className="flex justify-between items-start mb-3">
-                <h4 className="text-lg font-bold text-gray-800">문제 #{problem.id}</h4>
-                <div className="flex space-x-2">
-                  {getDifficultyBadge(problem.difficulty)}
-                  {getStatusBadge(problem.status)}
+        <>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {problems.map(problem => (
+              <div
+                key={problem.id}
+                className="bg-white p-6 rounded-xl shadow-lg border border-gray-200 hover:shadow-xl transition-shadow cursor-pointer"
+                onClick={() => handleCardClick(problem.id)}
+              >
+                <div className="flex justify-between items-start mb-3">
+                  <h4 className="text-lg font-bold text-gray-800">문제 #{problem.id}</h4>
+                  <div className="flex space-x-2">
+                    {getDifficultyBadge(problem.difficulty)}
+                    {getStatusBadge(problem.status)}
+                  </div>
+                </div>
+                <div className="text-sm text-gray-600 mb-2">
+                  <span className="font-medium">{problem.subject}</span> &gt; {problem.chapter_code}
+                </div>
+                <div className="text-gray-900 leading-relaxed text-base line-clamp-3 mb-3">
+                  {renderKaTeX(problem.question)}
+                </div>
+                <div className="flex gap-2" onClick={e => e.stopPropagation()}>
+                  <button onClick={(e) => handleVariant(e, problem.id)}
+                    className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-2.5 py-1 rounded font-medium">
+                    변형 생성
+                  </button>
+                  <button onClick={() => handleCardClick(problem.id)}
+                    className="bg-indigo-500 hover:bg-indigo-600 text-white text-xs px-2.5 py-1 rounded font-medium">
+                    편집
+                  </button>
                 </div>
               </div>
-              <div className="text-sm text-gray-600 mb-2">
-                <span className="font-medium">{problem.subject}</span> &gt; {problem.chapter_code}
-              </div>
-              <div className="text-gray-900 leading-relaxed text-base line-clamp-3 mb-3">
-                {renderKaTeX(problem.question)}
-              </div>
-              <div className="flex gap-2" onClick={e => e.stopPropagation()}>
-                <button onClick={(e) => handleVariant(e, problem.id)}
-                  className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-2.5 py-1 rounded font-medium">
-                  변형 생성
+            ))}
+          </div>
+
+          {/* Pagination */}
+          {totalPages > 1 && (
+            <div className="flex justify-center mt-8">
+              <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                <button
+                  onClick={() => setPage(prev => Math.max(1, prev - 1))}
+                  disabled={page === 1}
+                  className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span>이전</span>
                 </button>
-                <button onClick={() => handleCardClick(problem.id)}
-                  className="bg-indigo-500 hover:bg-indigo-600 text-white text-xs px-2.5 py-1 rounded font-medium">
-                  편집
+
+                {/* Page Numbers */}
+                {renderPaginationButtons()}
+
+                <button
+                  onClick={() => setPage(prev => Math.min(totalPages, prev + 1))}
+                  disabled={page === totalPages}
+                  className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <span>다음</span>
                 </button>
-              </div>
+              </nav>
             </div>
-          ))}
-        </div>
+          )}
+        </>
       )}
     </div>
   );

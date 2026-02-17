@@ -15,6 +15,14 @@ const buildWhereClause = (params) => {
         conditions.push('chapter_code = ?');
         values.push(params.chapter_code);
     }
+    // Multi chapter_codes filter: ?chapter_codes=1-1-3,1-1-4,2-1-1
+    if (params.chapter_codes) {
+        const codes = params.chapter_codes.split(',').map(c => c.trim()).filter(Boolean);
+        if (codes.length > 0) {
+            conditions.push(`chapter_code IN (${codes.map(() => '?').join(',')})`);
+            values.push(...codes);
+        }
+    }
     if (params.status) {
         conditions.push('status = ?');
         values.push(params.status);
@@ -27,6 +35,11 @@ const buildWhereClause = (params) => {
         conditions.push('type = ?');
         values.push(params.type);
     }
+    // Keyword search in question text
+    if (params.search) {
+        conditions.push('question LIKE ?');
+        values.push(`%${params.search}%`);
+    }
 
     return {
         where: conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '',
@@ -37,9 +50,27 @@ const buildWhereClause = (params) => {
 // GET /api/problems - Get all problems with optional filters
 router.get('/', (req, res) => {
     try {
+        const { page = 1, limit = 20 } = req.query;
+        const offset = (parseInt(page) - 1) * parseInt(limit);
+
         const { where, values } = buildWhereClause(req.query);
-        const problems = db.prepare(`SELECT * FROM problems ${where} ORDER BY created_at DESC`).all(values);
-        res.json(problems);
+
+        // Get total count
+        const totalProblemsQuery = db.prepare(`SELECT COUNT(*) as total FROM problems ${where}`);
+        const total = totalProblemsQuery.get(values).total;
+
+        // Get problems for the current page
+        const problemsQuery = db.prepare(`SELECT * FROM problems ${where} ORDER BY created_at DESC LIMIT ? OFFSET ?`);
+        const problems = problemsQuery.all([...values, parseInt(limit), offset]);
+
+        const totalPages = Math.ceil(total / parseInt(limit));
+
+        res.json({
+            problems,
+            total,
+            page: parseInt(page),
+            totalPages
+        });
     } catch (err) {
         console.error('Error fetching problems:', err);
         res.status(500).json({ error: err.message });
