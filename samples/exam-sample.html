@@ -1,0 +1,994 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>월말평가 시험지</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <style>
+    @page {
+      size: A4;
+      margin: 12mm 10mm 15mm 10mm;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: 'Malgun Gothic', '맑은 고딕', 'Noto Sans KR', sans-serif;
+      font-size: 10pt;
+      line-height: 1.5;
+      color: #222;
+      background: white;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 0;
+      page-break-after: always;
+      position: relative;
+    }
+
+    /* ===== 헤더 ===== */
+    .exam-header {
+      background: linear-gradient(135deg, #2d5a27 0%, #4a8c3f 100%);
+      color: white;
+      padding: 10px 16px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-radius: 0 0 8px 8px;
+    }
+
+    .exam-header .left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .exam-header .step-badge {
+      background: #fff;
+      color: #2d5a27;
+      padding: 2px 10px;
+      border-radius: 4px;
+      font-weight: 700;
+      font-size: 11pt;
+    }
+
+    .exam-header .grade-badge {
+      background: rgba(255,255,255,0.2);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 10pt;
+    }
+
+    .exam-header .title {
+      font-size: 13pt;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+    }
+
+    .exam-header .right {
+      text-align: right;
+      font-size: 9pt;
+    }
+
+    /* ===== 학생 정보 바 ===== */
+    .student-info-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px;
+      border-bottom: 2px solid #2d5a27;
+      margin-bottom: 10px;
+    }
+
+    .student-info-bar .info-left {
+      display: flex;
+      gap: 20px;
+      font-size: 10pt;
+    }
+
+    .student-info-bar .info-left span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .student-info-bar .info-left .label {
+      color: #666;
+      font-size: 9pt;
+    }
+
+    .student-info-bar .info-left .value {
+      font-weight: 700;
+      border-bottom: 1px solid #333;
+      min-width: 60px;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .student-info-bar .info-right {
+      font-size: 9pt;
+      color: #666;
+    }
+
+    /* ===== 2단 레이아웃 ===== */
+    .two-column {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      padding: 0 10px;
+    }
+
+    .column {
+      min-width: 0;
+    }
+
+    /* ===== 유형 섹션 ===== */
+    .type-section {
+      margin-bottom: 14px;
+      border: 1px solid #ddd;
+      border-radius: 6px;
+      overflow: hidden;
+    }
+
+    .type-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      padding: 5px 10px;
+      background: #f0f7ed;
+      border-bottom: 1px solid #cde0c6;
+    }
+
+    .type-number {
+      background: #2d5a27;
+      color: white;
+      padding: 2px 8px;
+      border-radius: 3px;
+      font-size: 9pt;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .type-name {
+      font-size: 10pt;
+      font-weight: 700;
+      color: #2d5a27;
+    }
+
+    /* ===== 체크 포인트 ===== */
+    .check-point {
+      padding: 8px 10px;
+      background: #fafff8;
+      border-bottom: 1px dashed #cde0c6;
+      font-size: 8.5pt;
+      color: #444;
+    }
+
+    .check-point .cp-title {
+      font-weight: 700;
+      color: #2d5a27;
+      margin-bottom: 3px;
+      font-size: 8.5pt;
+    }
+
+    .check-point .cp-title::before {
+      content: '✔ ';
+      color: #4a8c3f;
+    }
+
+    .check-point ul {
+      padding-left: 14px;
+      margin: 2px 0;
+    }
+
+    .check-point li {
+      margin: 1px 0;
+      line-height: 1.4;
+    }
+
+    .check-point .example {
+      background: #eef5eb;
+      padding: 3px 6px;
+      border-radius: 3px;
+      margin-top: 3px;
+      font-size: 8pt;
+    }
+
+    /* ===== 문제 ===== */
+    .problem {
+      padding: 8px 10px;
+      border-bottom: 1px solid #eee;
+    }
+
+    .problem:last-child {
+      border-bottom: none;
+    }
+
+    .problem-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 4px;
+    }
+
+    .problem-number {
+      font-weight: 700;
+      font-size: 11pt;
+      color: #2d5a27;
+      min-width: 20px;
+    }
+
+    /* 난이도 표시 */
+    .difficulty {
+      display: flex;
+      gap: 2px;
+      margin-left: auto;
+    }
+
+    .diff-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      border: 1px solid #999;
+    }
+
+    .diff-dot.filled {
+      background: #e67e22;
+      border-color: #e67e22;
+    }
+
+    .diff-dot.empty {
+      background: #fff;
+    }
+
+    /* 태그 배지 */
+    .tag-badge {
+      font-size: 7pt;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 700;
+    }
+
+    .tag-representative {
+      background: #fff3e0;
+      color: #e67e22;
+      border: 1px solid #e67e22;
+    }
+
+    .tag-must {
+      background: #fce4ec;
+      color: #e53935;
+      border: 1px solid #e53935;
+    }
+
+    .problem-text {
+      font-size: 10pt;
+      line-height: 1.6;
+      margin-bottom: 6px;
+    }
+
+    /* 보기 */
+    .choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px 12px;
+      padding-left: 4px;
+      font-size: 9.5pt;
+    }
+
+    .choices.single-col {
+      grid-template-columns: 1fr;
+    }
+
+    .choice {
+      padding: 1px 0;
+    }
+
+    /* 보기 박스 */
+    .bogi-box {
+      border: 1px solid #999;
+      padding: 6px 10px;
+      margin: 6px 0;
+      border-radius: 4px;
+      font-size: 9pt;
+    }
+
+    .bogi-box .bogi-title {
+      text-align: center;
+      font-size: 8pt;
+      color: #666;
+      margin-bottom: 4px;
+    }
+
+    .bogi-items {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px 16px;
+    }
+
+    /* 서술형 풀이란 */
+    .descriptive-area {
+      border: 1px solid #ccc;
+      min-height: 80px;
+      margin-top: 6px;
+      border-radius: 4px;
+      padding: 6px;
+      position: relative;
+    }
+
+    .descriptive-area .da-label {
+      font-size: 8pt;
+      color: #999;
+      position: absolute;
+      top: 4px;
+      left: 8px;
+    }
+
+    .descriptive-area .lines {
+      margin-top: 14px;
+    }
+
+    .descriptive-area .line {
+      border-bottom: 1px dotted #ddd;
+      height: 22px;
+    }
+
+    /* ===== 푸터 ===== */
+    .page-footer {
+      position: absolute;
+      bottom: 8mm;
+      left: 10mm;
+      right: 10mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 8pt;
+      color: #999;
+      border-top: 1px solid #ddd;
+      padding-top: 4px;
+    }
+
+    .page-footer .page-num {
+      font-weight: 700;
+      color: #666;
+    }
+
+    /* 수식 크기 조정 */
+    .katex { font-size: 1em; }
+    .problem-text .katex { font-size: 1.05em; }
+    .check-point .katex { font-size: 0.95em; }
+
+    /* 서술형 마크 */
+    .descriptive-mark {
+      display: inline-block;
+      background: #2d5a27;
+      color: white;
+      font-size: 7.5pt;
+      padding: 1px 5px;
+      border-radius: 3px;
+      margin-left: 4px;
+      font-weight: 700;
+    }
+
+    /* 점수 */
+    .points {
+      font-size: 8pt;
+      color: #888;
+      margin-left: 4px;
+    }
+
+    /* 표 */
+    .problem table {
+      border-collapse: collapse;
+      margin: 4px 0;
+    }
+    .problem table td, .problem table th {
+      border: 1px solid #999;
+      padding: 3px 8px;
+      font-size: 9pt;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== 1페이지 ===== -->
+<div class="page">
+
+  <!-- 헤더 -->
+  <div class="exam-header">
+    <div class="left">
+      <span class="step-badge">월말평가</span>
+      <span class="grade-badge">중2</span>
+      <span class="title">I. 수와 식 - 유리수와 순환소수 / 단항식과 다항식의 계산</span>
+    </div>
+    <div class="right">
+      Exam Builder<br>
+      <small>2026년 2월</small>
+    </div>
+  </div>
+
+  <!-- 학생 정보 -->
+  <div class="student-info-bar">
+    <div class="info-left">
+      <span><span class="label">이름</span> <span class="value">김지후</span></span>
+      <span><span class="label">학년</span> <span class="value">중2</span></span>
+      <span><span class="label">날짜</span> <span class="value">2026. 02. 28</span></span>
+      <span><span class="label">시간</span> <span class="value">50분</span></span>
+    </div>
+    <div class="info-right">총 15문제 / 100점</div>
+  </div>
+
+  <!-- 2단 레이아웃 -->
+  <div class="two-column">
+
+    <!-- 왼쪽 컬럼 -->
+    <div class="column">
+
+      <!-- 유형 01 -->
+      <div class="type-section">
+        <div class="type-header">
+          <span class="type-number">유형 01</span>
+          <span class="type-name">유리수와 소수</span>
+          <span style="font-size:8pt; color:#888; margin-left:auto;">연관단원: 1-1-1-(1)</span>
+        </div>
+        <div class="check-point">
+          <div class="cp-title">체크 Point</div>
+          <ul>
+            <li>유리수 ⇒ 분수 $\frac{a}{b}$ ($a$, $b$는 정수, $b \neq 0$)의 꼴로 나타낼 수 있는 수</li>
+            <li>유한소수: 소수점 아래의 0이 아닌 숫자가 유한개인 소수</li>
+            <li>무한소수: 소수점 아래의 0이 아닌 숫자가 무한히 많은 소수</li>
+            <li>순환소수: 무한소수 중 소수점 아래 어떤 자리에서부터 일정한 숫자의 배열이 한없이 되풀이되는 소수</li>
+          </ul>
+        </div>
+
+        <!-- 문제 1 -->
+        <div class="problem">
+          <div class="problem-header">
+            <span class="problem-number">1</span>
+            <span class="tag-badge tag-representative">대표</span>
+            <span class="points">[6점]</span>
+            <div class="difficulty">
+              <div class="diff-dot empty"></div>
+              <div class="diff-dot filled"></div>
+              <div class="diff-dot filled"></div>
+            </div>
+          </div>
+          <div class="problem-text">
+            다음 중 유리수가 <b>아닌</b> 것은?
+          </div>
+          <div class="choices">
+            <span class="choice">① $-\dfrac{4}{9}$</span>
+            <span class="choice">② $\dfrac{11}{4}$</span>
+            <span class="choice">③ $0.45$</span>
+            <span class="choice">④ $\dfrac{\pi}{2}$</span>
+            <span class="choice">⑤ $-3$</span>
+          </div>
+        </div>
+
+        <!-- 문제 2 -->
+        <div class="problem">
+          <div class="problem-header">
+            <span class="problem-number">2</span>
+            <span class="tag-badge tag-must">꼭 나오는 문제</span>
+            <span class="points">[6점]</span>
+            <div class="difficulty">
+              <div class="diff-dot empty"></div>
+              <div class="diff-dot filled"></div>
+              <div class="diff-dot filled"></div>
+            </div>
+          </div>
+          <div class="problem-text">
+            &lt;보기&gt;에서 무한소수인 것을 있는 대로 고른 것은?
+          </div>
+          <div class="bogi-box">
+            <div class="bogi-title">&lt;보 기&gt;</div>
+            <div class="bogi-items">
+              <span>ㄱ. $0.1\dot{7}$</span>
+              <span>ㄴ. $2.666\cdots$</span>
+              <span>ㄷ. $0.19999$</span>
+              <span>ㄹ. $3.14$</span>
+            </div>
+          </div>
+          <div class="choices">
+            <span class="choice">① ㄱ, ㄴ</span>
+            <span class="choice">② ㄱ, ㄷ</span>
+            <span class="choice">③ ㄴ, ㄷ</span>
+            <span class="choice">④ ㄴ, ㄹ</span>
+            <span class="choice">⑤ ㄷ, ㄹ</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 유형 02 -->
+      <div class="type-section">
+        <div class="type-header">
+          <span class="type-number">유형 02</span>
+          <span class="type-name">유한소수로 나타낼 수 있는 분수</span>
+          <span style="font-size:8pt; color:#888; margin-left:auto;">연관단원: 1-1-1-(2)</span>
+        </div>
+        <div class="check-point">
+          <div class="cp-title">체크 Point</div>
+          <ul>
+            <li>기약분수에서 분모의 소인수가 2 또는 5뿐이면 유한소수로 나타낼 수 있다.</li>
+            <li>기약분수의 분모가 2와 5 이외의 소인수를 가지면 순환소수이다.</li>
+          </ul>
+          <div class="example">
+            (예) $\dfrac{3}{4} = \dfrac{3}{2^2} = \dfrac{3 \times 5^2}{2^2 \times 5^2} = \dfrac{75}{10^2} = 0.75$
+          </div>
+        </div>
+
+        <!-- 문제 3 -->
+        <div class="problem">
+          <div class="problem-header">
+            <span class="problem-number">3</span>
+            <span class="tag-badge tag-representative">대표</span>
+            <span class="points">[7점]</span>
+            <div class="difficulty">
+              <div class="diff-dot empty"></div>
+              <div class="diff-dot filled"></div>
+              <div class="diff-dot filled"></div>
+            </div>
+          </div>
+          <div class="problem-text">
+            다음 분수 중에서 유한소수로 나타낼 수 있는 것의 개수는?
+          </div>
+          <div style="text-align:center; margin: 6px 0; font-size: 10pt;">
+            $\dfrac{24}{15}$, $\dfrac{26}{56}$, $\dfrac{45}{2^2 \times 3^3}$, $\dfrac{30}{2^2 \times 3^2 \times 5}$, $\dfrac{132}{440}$
+          </div>
+          <div class="choices">
+            <span class="choice">① 1</span>
+            <span class="choice">② 2</span>
+            <span class="choice">③ 3</span>
+            <span class="choice">④ 4</span>
+            <span class="choice">⑤ 5</span>
+          </div>
+        </div>
+
+        <!-- 문제 4 -->
+        <div class="problem">
+          <div class="problem-header">
+            <span class="problem-number">4</span>
+            <span class="tag-badge tag-must">꼭 나오는 문제</span>
+            <span class="points">[7점]</span>
+            <div class="difficulty">
+              <div class="diff-dot empty"></div>
+              <div class="diff-dot empty"></div>
+              <div class="diff-dot filled"></div>
+            </div>
+          </div>
+          <div class="problem-text">
+            분수 $\dfrac{7}{875}$을 유한소수로 나타내는 과정이다. $a + b + c + 1000d$의 값은?
+          </div>
+          <div style="text-align:center; margin: 6px 0; font-size: 10pt;">
+            $\dfrac{7}{875} = \dfrac{1}{\boxed{a}} = \dfrac{1 \times \boxed{b}}{5^3 \times \boxed{b}} = \dfrac{8}{\boxed{c}} = \boxed{d}$
+          </div>
+          <div class="choices">
+            <span class="choice">① 1141</span>
+            <span class="choice">② 1231</span>
+            <span class="choice">③ 1278</span>
+            <span class="choice">④ 1352</span>
+            <span class="choice">⑤ 1433</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 오른쪽 컬럼 -->
+    <div class="column">
+
+      <!-- 유형 03 -->
+      <div class="type-section">
+        <div class="type-header">
+          <span class="type-number">유형 03</span>
+          <span class="type-name">순환소수의 표현</span>
+          <span style="font-size:8pt; color:#888; margin-left:auto;">연관단원: 1-1-1-(3)</span>
+        </div>
+        <div class="check-point">
+          <div class="cp-title">체크 Point</div>
+          <ul>
+            <li>순환마디: 순환소수에서 한없이 되풀이되는 한 부분</li>
+            <li>순환소수의 표현: 첫 번째 순환마디의 양 끝의 숫자 위에 점을 찍어 나타낸다.</li>
+          </ul>
+          <div class="example">
+            (예) $2.123123123\cdots = 2.\dot{1}2\dot{3}$, &nbsp; $0.36666\cdots = 0.3\dot{6}$
+          </div>
+        </div>
+
+        <!-- 문제 5 -->
+        <div class="problem">
+          <div class="problem-header">
+            <span class="problem-number">5</span>
+            <span class="tag-badge tag-must">꼭 나오는 문제</span>
+            <span class="points">[6점]</span>
+            <div class="difficulty">
+              <div class="diff-dot empty"></div>
+              <div class="diff-dot filled"></div>
+              <div class="diff-dot filled"></div>
+            </div>
+          </div>
+          <div class="problem-text">
+            다음 중 순환소수의 순환마디를 바르게 적은 것은?
+          </div>
+          <div class="choices single-col">
+            <span class="choice">① $0.505050\cdots \Rightarrow 5$</span>
+            <span class="choice">② $2.1363636\cdots \Rightarrow 36$</span>
+            <span class="choice">③ $-1.313131\cdots \Rightarrow 13$</span>
+            <span class="choice">④ $0.4161616\cdots \Rightarrow 416$</span>
+            <span class="choice">⑤ $-0.127412741274\cdots \Rightarrow 2741$</span>
+          </div>
+        </div>
+
+        <!-- 문제 6 -->
+        <div class="problem">
+          <div class="problem-header">
+            <span class="problem-number">6</span>
+            <span class="points">[7점]</span>
+            <div class="difficulty">
+              <div class="diff-dot filled"></div>
+              <div class="diff-dot filled"></div>
+              <div class="diff-dot filled"></div>
+            </div>
+          </div>
+          <div class="problem-text">
+            분수 $\dfrac{5}{14}$를 소수로 나타내었을 때, 소수점 아래 36번째 자리의 숫자는?
+          </div>
+          <div class="choices">
+            <span class="choice">① 1</span>
+            <span class="choice">② 2</span>
+            <span class="choice">③ 4</span>
+            <span class="choice">④ 5</span>
+            <span class="choice">⑤ 8</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 유형 04 -->
+      <div class="type-section">
+        <div class="type-header">
+          <span class="type-number">유형 04</span>
+          <span class="type-name">순환소수를 분수로 나타내기</span>
+          <span style="font-size:8pt; color:#888; margin-left:auto;">연관단원: 1-1-1-(3)</span>
+        </div>
+        <div class="check-point">
+          <div class="cp-title">체크 Point</div>
+          <ul>
+            <li>순환소수를 $x$라 한다.</li>
+            <li>양변에 $10$의 거듭제곱을 곱하여 소수 부분이 같은 두 식을 만든다.</li>
+            <li>두 식을 변끼리 빼서 $x$를 구한다.</li>
+          </ul>
+        </div>
+
+        <!-- 문제 7 -->
+        <div class="problem">
+          <div class="problem-header">
+            <span class="problem-number">7</span>
+            <span class="tag-badge tag-representative">대표</span>
+            <span class="points">[6점]</span>
+            <div class="difficulty">
+              <div class="diff-dot empty"></div>
+              <div class="diff-dot filled"></div>
+              <div class="diff-dot filled"></div>
+            </div>
+          </div>
+          <div class="problem-text">
+            순환소수 $x = 0.3\dot{7}\dot{2}$를 분수로 나타내려고 할 때 필요한 식은?
+          </div>
+          <div class="choices single-col">
+            <span class="choice">① $10x - x$</span>
+            <span class="choice">② $100x - x$</span>
+            <span class="choice">③ $100x - 10x$</span>
+            <span class="choice">④ $1000x - 10x$</span>
+            <span class="choice">⑤ $1000x - 100x$</span>
+          </div>
+        </div>
+
+        <!-- 문제 8 -->
+        <div class="problem">
+          <div class="problem-header">
+            <span class="problem-number">8</span>
+            <span class="points">[7점]</span>
+            <div class="difficulty">
+              <div class="diff-dot filled"></div>
+              <div class="diff-dot filled"></div>
+              <div class="diff-dot filled"></div>
+            </div>
+          </div>
+          <div class="problem-text">
+            $x$에 관한 일차방정식 $ax = 12$의 해를 유한소수로 나타낼 수 있다고 할 때, $a$의 값이 될 수 <b>없는</b> 것은?
+          </div>
+          <div class="choices">
+            <span class="choice">① 15</span>
+            <span class="choice">② 16</span>
+            <span class="choice">③ 18</span>
+            <span class="choice">④ 24</span>
+            <span class="choice">⑤ 30</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 푸터 -->
+  <div class="page-footer">
+    <span>Exam Builder - 월말평가</span>
+    <span>중2 수학 | 1-1-1. 유리수와 순환소수</span>
+    <span class="page-num">- 1 -</span>
+  </div>
+</div>
+
+<!-- ===== 2페이지 ===== -->
+<div class="page">
+
+  <div class="exam-header">
+    <div class="left">
+      <span class="step-badge">월말평가</span>
+      <span class="grade-badge">중2</span>
+      <span class="title">I. 수와 식 - 유리수와 순환소수 / 단항식과 다항식의 계산</span>
+    </div>
+    <div class="right">
+      Exam Builder<br>
+      <small>2026년 2월</small>
+    </div>
+  </div>
+
+  <div style="height:8px;"></div>
+
+  <div class="two-column">
+    <!-- 왼쪽 컬럼 -->
+    <div class="column">
+
+      <!-- 유형 05: 단항식의 계산 -->
+      <div class="type-section">
+        <div class="type-header">
+          <span class="type-number">유형 05</span>
+          <span class="type-name">지수법칙</span>
+          <span style="font-size:8pt; color:#888; margin-left:auto;">연관단원: 1-2-1</span>
+        </div>
+        <div class="check-point">
+          <div class="cp-title">체크 Point</div>
+          <ul>
+            <li>$a^m \times a^n = a^{m+n}$</li>
+            <li>$(a^m)^n = a^{mn}$</li>
+            <li>$a^m \div a^n = a^{m-n}$ ($m > n$)</li>
+            <li>$(ab)^n = a^n b^n$</li>
+          </ul>
+        </div>
+
+        <!-- 문제 9 -->
+        <div class="problem">
+          <div class="problem-header">
+            <span class="problem-number">9</span>
+            <span class="tag-badge tag-representative">대표</span>
+            <span class="points">[6점]</span>
+            <div class="difficulty">
+              <div class="diff-dot empty"></div>
+              <div class="diff-dot empty"></div>
+              <div class="diff-dot filled"></div>
+            </div>
+          </div>
+          <div class="problem-text">
+            $2^3 \times 2^5 \div 2^4$를 계산하면?
+          </div>
+          <div class="choices">
+            <span class="choice">① $2^2$</span>
+            <span class="choice">② $2^3$</span>
+            <span class="choice">③ $2^4$</span>
+            <span class="choice">④ $2^5$</span>
+            <span class="choice">⑤ $2^6$</span>
+          </div>
+        </div>
+
+        <!-- 문제 10 -->
+        <div class="problem">
+          <div class="problem-header">
+            <span class="problem-number">10</span>
+            <span class="points">[7점]</span>
+            <div class="difficulty">
+              <div class="diff-dot empty"></div>
+              <div class="diff-dot filled"></div>
+              <div class="diff-dot filled"></div>
+            </div>
+          </div>
+          <div class="problem-text">
+            $(x^2y)^3 \div x^4y$를 계산하면?
+          </div>
+          <div class="choices">
+            <span class="choice">① $x^2y$</span>
+            <span class="choice">② $x^2y^2$</span>
+            <span class="choice">③ $x^3y^2$</span>
+            <span class="choice">④ $x^4y^2$</span>
+            <span class="choice">⑤ $x^4y^3$</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- 유형 06: 다항식 -->
+      <div class="type-section">
+        <div class="type-header">
+          <span class="type-number">유형 06</span>
+          <span class="type-name">다항식의 계산</span>
+          <span style="font-size:8pt; color:#888; margin-left:auto;">연관단원: 1-2-2</span>
+        </div>
+
+        <!-- 문제 11 -->
+        <div class="problem">
+          <div class="problem-header">
+            <span class="problem-number">11</span>
+            <span class="points">[7점]</span>
+            <div class="difficulty">
+              <div class="diff-dot empty"></div>
+              <div class="diff-dot filled"></div>
+              <div class="diff-dot filled"></div>
+            </div>
+          </div>
+          <div class="problem-text">
+            $(3x^2 + 5x - 2) - (x^2 - 3x + 4)$를 계산하면?
+          </div>
+          <div class="choices single-col">
+            <span class="choice">① $2x^2 + 8x - 6$</span>
+            <span class="choice">② $2x^2 + 2x - 6$</span>
+            <span class="choice">③ $2x^2 + 8x + 2$</span>
+            <span class="choice">④ $4x^2 + 2x - 6$</span>
+            <span class="choice">⑤ $4x^2 + 8x - 6$</span>
+          </div>
+        </div>
+
+        <!-- 문제 12 -->
+        <div class="problem">
+          <div class="problem-header">
+            <span class="problem-number">12</span>
+            <span class="tag-badge tag-must">꼭 나오는 문제</span>
+            <span class="points">[7점]</span>
+            <div class="difficulty">
+              <div class="diff-dot filled"></div>
+              <div class="diff-dot filled"></div>
+              <div class="diff-dot filled"></div>
+            </div>
+          </div>
+          <div class="problem-text">
+            $A = 2x^2 - 3x + 1$, $B = x^2 + 2x - 5$일 때, $2A - B$를 계산하면?
+          </div>
+          <div class="choices single-col">
+            <span class="choice">① $3x^2 - 8x + 7$</span>
+            <span class="choice">② $3x^2 - 4x + 7$</span>
+            <span class="choice">③ $3x^2 - 8x - 3$</span>
+            <span class="choice">④ $5x^2 - 8x + 7$</span>
+            <span class="choice">⑤ $5x^2 - 4x + 7$</span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 오른쪽 컬럼 -->
+    <div class="column">
+
+      <!-- 서술형 섹션 -->
+      <div class="type-section">
+        <div class="type-header">
+          <span class="type-number" style="background:#c0392b;">서술형</span>
+          <span class="type-name" style="color:#c0392b;">풀이 과정을 반드시 적으시오</span>
+        </div>
+
+        <!-- 문제 13 (서술형) -->
+        <div class="problem">
+          <div class="problem-header">
+            <span class="problem-number">13</span>
+            <span class="descriptive-mark">서술형</span>
+            <span class="points">[8점]</span>
+            <div class="difficulty">
+              <div class="diff-dot empty"></div>
+              <div class="diff-dot filled"></div>
+              <div class="diff-dot filled"></div>
+            </div>
+          </div>
+          <div class="problem-text">
+            순환소수 $1.\dot{3}\dot{6}$을 분수로 나타내시오. (풀이 과정을 반드시 쓰시오)
+          </div>
+          <div class="descriptive-area">
+            <span class="da-label">풀이</span>
+            <div class="lines">
+              <div class="line"></div>
+              <div class="line"></div>
+              <div class="line"></div>
+              <div class="line"></div>
+              <div class="line"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 문제 14 (서술형) -->
+        <div class="problem">
+          <div class="problem-header">
+            <span class="problem-number">14</span>
+            <span class="descriptive-mark">서술형</span>
+            <span class="points">[10점]</span>
+            <div class="difficulty">
+              <div class="diff-dot filled"></div>
+              <div class="diff-dot filled"></div>
+              <div class="diff-dot filled"></div>
+            </div>
+          </div>
+          <div class="problem-text">
+            두 분수 $\dfrac{7}{30}$, $\dfrac{21}{52}$에 어떤 자연수 $A$를 곱하면 모두 유한소수로 나타낼 수 있다고 한다. 이때, 가장 작은 자연수 $A$의 값을 구하시오. (풀이 과정을 반드시 쓰시오)
+          </div>
+          <div class="descriptive-area">
+            <span class="da-label">풀이</span>
+            <div class="lines">
+              <div class="line"></div>
+              <div class="line"></div>
+              <div class="line"></div>
+              <div class="line"></div>
+              <div class="line"></div>
+              <div class="line"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- 문제 15 (서술형) -->
+        <div class="problem">
+          <div class="problem-header">
+            <span class="problem-number">15</span>
+            <span class="descriptive-mark">서술형</span>
+            <span class="points">[10점]</span>
+            <div class="difficulty">
+              <div class="diff-dot filled"></div>
+              <div class="diff-dot filled"></div>
+              <div class="diff-dot filled"></div>
+            </div>
+          </div>
+          <div class="problem-text">
+            $2x(3x - 4) - 3(x^2 - 2x + 1)$을 계산한 후, $x = -2$일 때의 식의 값을 구하시오. (풀이 과정을 반드시 쓰시오)
+          </div>
+          <div class="descriptive-area">
+            <span class="da-label">풀이</span>
+            <div class="lines">
+              <div class="line"></div>
+              <div class="line"></div>
+              <div class="line"></div>
+              <div class="line"></div>
+              <div class="line"></div>
+              <div class="line"></div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- 푸터 -->
+  <div class="page-footer">
+    <span>Exam Builder - 월말평가</span>
+    <span>중2 수학 | 1-2-1. 단항식의 계산 / 1-2-2. 다항식의 계산</span>
+    <span class="page-num">- 2 -</span>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ],
+      throwOnError: false
+    });
+  });
+</script>
+
+</body>
+</html>

@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>월말평가 시험지 - 확률과 통계</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+  <style>
+    @page { size: A4; margin: 12mm 10mm 15mm 10mm; }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Malgun Gothic', '맑은 고딕', sans-serif;
+      font-size: 10pt;
+      line-height: 1.5;
+      color: #222;
+      background: white;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 0;
+      page-break-after: always;
+      position: relative;
+    }
+
+    /* ===== 헤더 ===== */
+    .exam-header {
+      border-bottom: 3px solid #1a237e;
+      padding: 12px 16px 10px;
+    }
+    .exam-header .top-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 8px;
+    }
+    .exam-title {
+      font-size: 20pt;
+      font-weight: 900;
+      color: #1a237e;
+      letter-spacing: 2px;
+    }
+    .exam-subtitle {
+      font-size: 11pt;
+      color: #555;
+      margin-top: 2px;
+    }
+    .exam-meta {
+      text-align: right;
+      font-size: 9pt;
+      color: #666;
+    }
+    .exam-meta .date {
+      font-size: 10pt;
+      font-weight: 700;
+      color: #333;
+    }
+
+    /* 학생 정보 */
+    .student-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 8px 16px;
+      background: #f5f5f5;
+      border-bottom: 1px solid #ddd;
+    }
+    .student-row .fields {
+      display: flex;
+      gap: 24px;
+      font-size: 10pt;
+    }
+    .student-row .field-label {
+      color: #888;
+      font-size: 9pt;
+    }
+    .student-row .field-value {
+      font-weight: 700;
+      border-bottom: 1px solid #333;
+      min-width: 70px;
+      display: inline-block;
+      text-align: center;
+      padding-bottom: 1px;
+    }
+    .student-row .score-box {
+      border: 2px solid #1a237e;
+      border-radius: 4px;
+      padding: 4px 14px;
+      font-size: 10pt;
+      font-weight: 700;
+      color: #1a237e;
+    }
+    .student-row .score-box .score-slash {
+      font-size: 13pt;
+      margin: 0 3px;
+    }
+
+    /* 유의사항 */
+    .notice {
+      padding: 6px 16px;
+      font-size: 8pt;
+      color: #888;
+      border-bottom: 1px solid #eee;
+      display: flex;
+      gap: 20px;
+    }
+    .notice b { color: #555; }
+
+    /* ===== 2단 레이아웃 ===== */
+    .two-column {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0;
+      padding: 0;
+    }
+    .column {
+      min-width: 0;
+      padding: 8px 12px;
+    }
+    .column:first-child {
+      border-right: 1px solid #ddd;
+    }
+
+    /* ===== 문제 ===== */
+    .problem {
+      margin-bottom: 14px;
+    }
+    .problem-header {
+      display: flex;
+      align-items: baseline;
+      gap: 6px;
+      margin-bottom: 4px;
+    }
+    .problem-number {
+      font-weight: 900;
+      font-size: 11pt;
+      color: #1a237e;
+      min-width: 20px;
+    }
+    .points {
+      font-size: 8pt;
+      color: #999;
+    }
+
+    .problem-text {
+      font-size: 10pt;
+      line-height: 1.65;
+      margin-bottom: 6px;
+      padding-left: 2px;
+    }
+
+    /* 보기 */
+    .choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2px 10px;
+      padding-left: 4px;
+      font-size: 9.5pt;
+    }
+    .choices.single-col {
+      grid-template-columns: 1fr;
+    }
+    .choices.three-col {
+      grid-template-columns: 1fr 1fr 1fr;
+    }
+    .choice { padding: 1px 0; }
+
+    /* 보기 박스 */
+    .bogi-box {
+      border: 1px solid #999;
+      padding: 6px 10px;
+      margin: 6px 0;
+      border-radius: 4px;
+      font-size: 9pt;
+    }
+    .bogi-box .bogi-title {
+      text-align: center;
+      font-size: 8pt;
+      color: #666;
+      margin-bottom: 4px;
+    }
+    .bogi-items {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+    }
+
+    /* 표 */
+    .problem table {
+      border-collapse: collapse;
+      margin: 6px auto;
+    }
+    .problem table td, .problem table th {
+      border: 1px solid #999;
+      padding: 4px 10px;
+      font-size: 9pt;
+      text-align: center;
+    }
+    .problem table th {
+      background: #f0f0f0;
+      font-weight: 700;
+    }
+
+    /* 서술형 */
+    .section-divider {
+      border-top: 2px solid #1a237e;
+      margin: 10px 0 8px;
+      padding-top: 6px;
+      font-size: 10pt;
+      font-weight: 700;
+      color: #1a237e;
+    }
+    .descriptive-mark {
+      display: inline-block;
+      background: #c62828;
+      color: white;
+      font-size: 7.5pt;
+      padding: 1px 5px;
+      border-radius: 3px;
+      font-weight: 700;
+    }
+    .descriptive-area {
+      border: 1px solid #ccc;
+      min-height: 80px;
+      margin-top: 6px;
+      border-radius: 4px;
+      padding: 6px;
+      position: relative;
+    }
+    .descriptive-area .da-label {
+      font-size: 8pt;
+      color: #999;
+      position: absolute;
+      top: 4px;
+      left: 8px;
+    }
+    .descriptive-area .lines { margin-top: 14px; }
+    .descriptive-area .line {
+      border-bottom: 1px dotted #ddd;
+      height: 22px;
+    }
+
+    /* 구분선 */
+    .separator {
+      border: none;
+      border-top: 1px dashed #ccc;
+      margin: 8px 0;
+    }
+
+    /* 센터 수식 */
+    .math-center {
+      text-align: center;
+      margin: 6px 0;
+      font-size: 10pt;
+    }
+
+    /* 푸터 */
+    .page-footer {
+      position: absolute;
+      bottom: 8mm;
+      left: 10mm;
+      right: 10mm;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 8pt;
+      color: #999;
+      border-top: 1px solid #ddd;
+      padding-top: 4px;
+    }
+    .page-footer .page-num {
+      font-weight: 700;
+      color: #666;
+    }
+
+    .katex { font-size: 1em; }
+    .problem-text .katex { font-size: 1.05em; }
+
+    /* 조건 박스 */
+    .condition-box {
+      border: 1px solid #aaa;
+      padding: 6px 10px;
+      margin: 6px 0;
+      border-radius: 4px;
+      font-size: 9.5pt;
+      line-height: 1.6;
+    }
+    .condition-box .cond-item {
+      margin: 2px 0;
+    }
+    .condition-box .cond-label {
+      color: #1a237e;
+      font-weight: 700;
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== 1페이지 ===== -->
+<div class="page">
+
+  <div class="exam-header">
+    <div class="top-row">
+      <div>
+        <div class="exam-title">월 말 평 가</div>
+        <div class="exam-subtitle">확률과 통계 | 순열과 조합 · 확률 · 통계</div>
+      </div>
+      <div class="exam-meta">
+        <div class="date">2026. 02. 28</div>
+        <div>제한시간: 50분</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="student-row">
+    <div class="fields">
+      <span><span class="field-label">학년 </span><span class="field-value">고2</span></span>
+      <span><span class="field-label">이름 </span><span class="field-value">박서연</span></span>
+    </div>
+    <div class="score-box">
+      <span class="field-label">점수</span>
+      <span class="score-slash">&nbsp;&nbsp;&nbsp;&nbsp;</span>/ 100
+    </div>
+  </div>
+
+  <div class="notice">
+    <span><b>총 20문제</b> (객관식 15문제 + 서술형 5문제)</span>
+    <span>객관식 각 문항 4점, 서술형 배점 별도 표기</span>
+    <span>답안은 답안지에 기재하시오.</span>
+  </div>
+
+  <div class="two-column">
+
+    <!-- 왼쪽 컬럼 -->
+    <div class="column">
+
+      <!-- 1번 -->
+      <div class="problem">
+        <div class="problem-header">
+          <span class="problem-number">1.</span>
+          <span class="points">[4점]</span>
+        </div>
+        <div class="problem-text">
+          서로 다른 6개의 색 중에서 4개를 택하여 일렬로 나열하는 경우의 수는?
+        </div>
+        <div class="choices">
+          <span class="choice">① 120</span>
+          <span class="choice">② 240</span>
+          <span class="choice">③ 360</span>
+          <span class="choice">④ 480</span>
+          <span class="choice">⑤ 720</span>
+        </div>
+      </div>
+
+      <!-- 2번 -->
+      <div class="problem">
+        <div class="problem-header">
+          <span class="problem-number">2.</span>
+          <span class="points">[4점]</span>
+        </div>
+        <div class="problem-text">
+          $\displaystyle\binom{8}{3} + \binom{8}{4}$의 값은?
+        </div>
+        <div class="choices">
+          <span class="choice">① 112</span>
+          <span class="choice">② 126</span>
+          <span class="choice">③ 140</span>
+          <span class="choice">④ 154</span>
+          <span class="choice">⑤ 168</span>
+        </div>
+      </div>
+
+      <!-- 3번 -->
+      <div class="problem">
+        <div class="problem-header">
+          <span class="problem-number">3.</span>
+          <span class="points">[4점]</span>
+        </div>
+        <div class="problem-text">
+          MATHEMATICS의 11개의 문자를 모두 일렬로 나열하는 경우의 수를 $n$이라 할 때, $\dfrac{n}{11!}$의 값은?
+        </div>
+        <div class="choices">
+          <span class="choice">① $\dfrac{1}{2}$</span>
+          <span class="choice">② $\dfrac{1}{4}$</span>
+          <span class="choice">③ $\dfrac{1}{6}$</span>
+          <span class="choice">④ $\dfrac{1}{8}$</span>
+          <span class="choice">⑤ $\dfrac{1}{12}$</span>
+        </div>
+      </div>
+
+      <!-- 4번 -->
+      <div class="problem">
+        <div class="problem-header">
+          <span class="problem-number">4.</span>
+          <span class="points">[4점]</span>
+        </div>
+        <div class="problem-text">
+          남학생 4명과 여학생 3명이 원형으로 둘러앉을 때, 여학생 3명이 이웃하여 앉는 경우의 수는?
+        </div>
+        <div class="choices">
+          <span class="choice">① 432</span>
+          <span class="choice">② 576</span>
+          <span class="choice">③ 720</span>
+          <span class="choice">④ 864</span>
+          <span class="choice">⑤ 1440</span>
+        </div>
+      </div>
+
+      <!-- 5번 -->
+      <div class="problem">
+        <div class="problem-header">
+          <span class="problem-number">5.</span>
+          <span class="points">[4점]</span>
+        </div>
+        <div class="problem-text">
+          집합 $A = \{1, 2, 3, 4, 5, 6\}$에서 집합 $B = \{a, b, c\}$로의 함수 $f$중에서 $f(1) \neq a$인 함수의 개수는?
+        </div>
+        <div class="choices">
+          <span class="choice">① 432</span>
+          <span class="choice">② 486</span>
+          <span class="choice">③ 516</span>
+          <span class="choice">④ 567</span>
+          <span class="choice">⑤ 648</span>
+        </div>
+      </div>
+
+      <!-- 6번 -->
+      <div class="problem">
+        <div class="problem-header">
+          <span class="problem-number">6.</span>
+          <span class="points">[4점]</span>
+        </div>
+        <div class="problem-text">
+          한 개의 주사위를 두 번 던져서 나온 눈의 수를 차례로 $a$, $b$라 할 때, $a + b \leq 4$인 경우의 수는?
+        </div>
+        <div class="choices">
+          <span class="choice">① 3</span>
+          <span class="choice">② 4</span>
+          <span class="choice">③ 5</span>
+          <span class="choice">④ 6</span>
+          <span class="choice">⑤ 7</span>
+        </div>
+      </div>
+
+      <!-- 7번 -->
+      <div class="problem">
+        <div class="problem-header">
+          <span class="problem-number">7.</span>
+          <span class="points">[4점]</span>
+        </div>
+        <div class="problem-text">
+          두 사건 $A$와 $B$가 서로 배반사건이고 $P(A) = \dfrac{1}{3}$, $P(B) = \dfrac{1}{4}$일 때, $P(A \cup B)$의 값은?
+        </div>
+        <div class="choices">
+          <span class="choice">① $\dfrac{5}{12}$</span>
+          <span class="choice">② $\dfrac{1}{2}$</span>
+          <span class="choice">③ $\dfrac{7}{12}$</span>
+          <span class="choice">④ $\dfrac{2}{3}$</span>
+          <span class="choice">⑤ $\dfrac{3}{4}$</span>
+        </div>
+      </div>
+
+      <!-- 8번 -->
+      <div class="problem">
+        <div class="problem-header">
+          <span class="problem-number">8.</span>
+          <span class="points">[4점]</span>
+        </div>
+        <div class="problem-text">
+          어느 공장에서 생산되는 제품의 불량률이 $0.1$이다. 이 공장에서 생산된 제품 중 임의로 3개를 선택할 때, 적어도 1개가 불량품일 확률은?
+        </div>
+        <div class="choices">
+          <span class="choice">① $\dfrac{271}{1000}$</span>
+          <span class="choice">② $\dfrac{243}{1000}$</span>
+          <span class="choice">③ $\dfrac{217}{1000}$</span>
+          <span class="choice">④ $\dfrac{189}{1000}$</span>
+          <span class="choice">⑤ $\dfrac{162}{1000}$</span>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 오른쪽 컬럼 -->
+    <div class="column">
+
+      <!-- 9번 -->
+      <div class="problem">
+        <div class="problem-header">
+          <span class="problem-number">9.</span>
+          <span class="points">[4점]</span>
+        </div>
+        <div class="problem-text">
+          한 개의 동전을 5번 던질 때, 앞면이 3번 나올 확률은?
+        </div>
+        <div class="choices">
+          <span class="choice">① $\dfrac{3}{16}$</span>
+          <span class="choice">② $\dfrac{5}{16}$</span>
+          <span class="choice">③ $\dfrac{7}{16}$</span>
+          <span class="choice">④ $\dfrac{9}{16}$</span>
+          <span class="choice">⑤ $\dfrac{3}{8}$</span>
+        </div>
+      </div>
+
+      <!-- 10번 -->
+      <div class="problem">
+        <div class="problem-header">
+          <span class="problem-number">10.</span>
+          <span class="points">[4점]</span>
+        </div>
+        <div class="problem-text">
+          확률변수 $X$의 확률분포표가 다음과 같을 때, $E(3X - 2)$의 값은?
+        </div>
+        <table style="margin: 6px auto;">
+          <tr>
+            <th>$X$</th><th>$0$</th><th>$1$</th><th>$2$</th><th>$3$</th><th>합계</th>
+          </tr>
+          <tr>
+            <th>$P(X=x)$</th>
+            <td>$\dfrac{1}{6}$</td>
+            <td>$\dfrac{1}{3}$</td>
+            <td>$a$</td>
+            <td>$\dfrac{1}{6}$</td>
+            <td>$1$</td>
+          </tr>
+        </table>
+        <div class="choices">
+          <span class="choice">① $1$</span>
+          <span class="choice">② $\dfrac{3}{2}$</span>
+          <span class="choice">③ $2$</span>
+          <span class="choice">④ $\dfrac{5}{2}$</span>
+          <span class="choice">⑤ $\dfrac{7}{2}$</span>
+        </div>
+      </div>
+
+      <!-- 11번 -->
+      <div class="problem">
+        <div class="problem-header">
+          <span class="problem-number">11.</span>
+          <span class="points">[4점]</span>
+        </div>
+        <div class="problem-text">
+          확률변수 $X$가 이항분포 $B(100, 0.3)$을 따를 때, $V(X)$의 값은?
+        </div>
+        <div class="choices">
+          <span class="choice">① 18</span>
+          <span class="choice">② 21</span>
+          <span class="choice">③ 24</span>
+          <span class="choice">④ 27</span>
+          <span class="choice">⑤ 30</span>
+        </div>
+      </div>
+
+      <!-- 12번 -->
+      <div class="problem">
+        <div class="problem-header">
+          <span class="problem-number">12.</span>
+          <span class="points">[4점]</span>
+        </div>
+        <div class="problem-text">
+          확률변수 $X$가 정규분포 $N(50, 4^2)$을 따를 때, $P(42 \leq X \leq 54)$의 값은?<br>
+          (단, $P(0 \leq Z \leq 1) = 0.3413$, $P(0 \leq Z \leq 2) = 0.4772$)
+        </div>
+        <div class="choices">
+          <span class="choice">① 0.7745</span>
+          <span class="choice">② 0.8185</span>
+          <span class="choice">③ 0.8413</span>
+          <span class="choice">④ 0.8664</span>
+          <span class="choice">⑤ 0.9104</span>
+        </div>
+      </div>
+
+      <!-- 13번 -->
+      <div class="problem">
+        <div class="problem-header">
+          <span class="problem-number">13.</span>
+          <span class="points">[4점]</span>
+        </div>
+        <div class="problem-text">
+          두 사건 $A$, $B$에 대하여 $P(A) = \dfrac{1}{2}$, $P(B|A) = \dfrac{2}{3}$, $P(A^c \cap B) = \dfrac{1}{6}$일 때, $P(B)$의 값은?
+        </div>
+        <div class="choices">
+          <span class="choice">① $\dfrac{1}{3}$</span>
+          <span class="choice">② $\dfrac{5}{12}$</span>
+          <span class="choice">③ $\dfrac{1}{2}$</span>
+          <span class="choice">④ $\dfrac{7}{12}$</span>
+          <span class="choice">⑤ $\dfrac{2}{3}$</span>
+        </div>
+      </div>
+
+      <!-- 14번 -->
+      <div class="problem">
+        <div class="problem-header">
+          <span class="problem-number">14.</span>
+          <span class="points">[4점]</span>
+        </div>
+        <div class="problem-text">
+          정규분포 $N(m, \sigma^2)$을 따르는 모집단에서 크기 $n$인 표본을 추출하여 구한 표본평균 $\bar{X}$에 대하여 $E(\bar{X}) = 60$, $\sigma(\bar{X}) = 2$일 때, $n$의 값은? (단, $\sigma = 10$)
+        </div>
+        <div class="choices">
+          <span class="choice">① 16</span>
+          <span class="choice">② 20</span>
+          <span class="choice">③ 25</span>
+          <span class="choice">④ 30</span>
+          <span class="choice">⑤ 36</span>
+        </div>
+      </div>
+
+      <!-- 15번 -->
+      <div class="problem">
+        <div class="problem-header">
+          <span class="problem-number">15.</span>
+          <span class="points">[4점]</span>
+        </div>
+        <div class="problem-text">
+          정규분포 $N(m, 6^2)$을 따르는 모집단에서 크기 $36$인 표본을 추출하여 구한 표본평균이 $52$이다. 모평균 $m$에 대한 신뢰도 $95\%$의 신뢰구간은?<br>
+          (단, $P(|Z| \leq 1.96) = 0.95$)
+        </div>
+        <div class="choices single-col">
+          <span class="choice">① $50.04 \leq m \leq 53.96$</span>
+          <span class="choice">② $50.40 \leq m \leq 53.60$</span>
+          <span class="choice">③ $49.08 \leq m \leq 54.92$</span>
+          <span class="choice">④ $50.80 \leq m \leq 53.20$</span>
+          <span class="choice">⑤ $49.72 \leq m \leq 54.28$</span>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>Exam Builder</span>
+    <span>확률과 통계 | 월말평가</span>
+    <span class="page-num">- 1 -</span>
+  </div>
+</div>
+
+<!-- ===== 2페이지 ===== -->
+<div class="page">
+
+  <div class="exam-header">
+    <div class="top-row">
+      <div>
+        <div class="exam-title" style="font-size:14pt;">월 말 평 가</div>
+        <div class="exam-subtitle">확률과 통계 | 서술형</div>
+      </div>
+      <div class="exam-meta">
+        풀이 과정을 반드시 쓰시오.
+      </div>
+    </div>
+  </div>
+
+  <div style="height:6px;"></div>
+
+  <div class="two-column">
+
+    <!-- 왼쪽 컬럼 -->
+    <div class="column">
+
+      <!-- 16번 (서술형) -->
+      <div class="problem">
+        <div class="problem-header">
+          <span class="problem-number">16.</span>
+          <span class="descriptive-mark">서술형</span>
+          <span class="points">[6점]</span>
+        </div>
+        <div class="problem-text">
+          $1$부터 $9$까지의 자연수 중에서 서로 다른 3개를 택하여 세 자리의 자연수를 만들 때, $500$ 이상인 홀수의 개수를 구하시오.
+        </div>
+        <div class="descriptive-area" style="min-height:110px;">
+          <span class="da-label">풀이</span>
+          <div class="lines">
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 17번 (서술형) -->
+      <div class="problem">
+        <div class="problem-header">
+          <span class="problem-number">17.</span>
+          <span class="descriptive-mark">서술형</span>
+          <span class="points">[6점]</span>
+        </div>
+        <div class="problem-text">
+          서로 다른 종류의 음료 5개를 3명에게 남김없이 나누어 주되, 각 사람이 적어도 1개씩 받도록 나누어 주는 경우의 수를 구하시오.
+        </div>
+        <div class="descriptive-area" style="min-height:110px;">
+          <span class="da-label">풀이</span>
+          <div class="lines">
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 18번 (서술형) -->
+      <div class="problem">
+        <div class="problem-header">
+          <span class="problem-number">18.</span>
+          <span class="descriptive-mark">서술형</span>
+          <span class="points">[8점]</span>
+        </div>
+        <div class="problem-text">
+          주머니에 흰 공 3개, 검은 공 4개가 들어 있다. 이 주머니에서 임의로 3개의 공을 동시에 꺼낼 때, 흰 공이 적어도 1개 포함될 확률을 구하시오.
+        </div>
+        <div class="descriptive-area" style="min-height:120px;">
+          <span class="da-label">풀이</span>
+          <div class="lines">
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- 오른쪽 컬럼 -->
+    <div class="column">
+
+      <!-- 19번 (서술형) -->
+      <div class="problem">
+        <div class="problem-header">
+          <span class="problem-number">19.</span>
+          <span class="descriptive-mark">서술형</span>
+          <span class="points">[8점]</span>
+        </div>
+        <div class="problem-text">
+          확률변수 $X$의 확률질량함수가
+          $$P(X = k) = \frac{k}{10} \quad (k = 1, 2, 3, 4)$$
+          일 때, $E(X)$와 $V(X)$의 값을 각각 구하시오.
+        </div>
+        <div class="descriptive-area" style="min-height:130px;">
+          <span class="da-label">풀이</span>
+          <div class="lines">
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- 20번 (서술형) -->
+      <div class="problem">
+        <div class="problem-header">
+          <span class="problem-number">20.</span>
+          <span class="descriptive-mark">서술형</span>
+          <span class="points">[12점]</span>
+        </div>
+        <div class="problem-text">
+          어느 과수원에서 생산되는 사과 한 개의 무게는 정규분포 $N(300, 20^2)$을 따른다고 한다. 이 과수원에서 생산된 사과 중 임의로 $25$개를 택하여 무게를 측정한 결과 표본평균이 $296$ g이었다.<br><br>
+          (1) 모평균 $m$에 대한 신뢰도 $95\%$의 신뢰구간을 구하시오.<br>
+          (2) 신뢰도 $99\%$로 모평균을 추정할 때, 신뢰구간의 길이가 $8$ 이하가 되기 위한 표본의 크기의 최솟값을 구하시오.<br><br>
+          <span style="font-size:8.5pt; color:#888;">(단, $P(|Z| \leq 1.96) = 0.95$, $P(|Z| \leq 2.58) = 0.99$)</span>
+        </div>
+        <div class="descriptive-area" style="min-height:160px;">
+          <span class="da-label">풀이</span>
+          <div class="lines">
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+            <div class="line"></div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="page-footer">
+    <span>Exam Builder</span>
+    <span>확률과 통계 | 월말평가</span>
+    <span class="page-num">- 2 -</span>
+  </div>
+</div>
+
+<script>
+  document.addEventListener('DOMContentLoaded', function() {
+    renderMathInElement(document.body, {
+      delimiters: [
+        {left: '$$', right: '$$', display: true},
+        {left: '$', right: '$', display: false}
+      ],
+      throwOnError: false
+    });
+  });
+</script>
+
+</body>
+</html>
