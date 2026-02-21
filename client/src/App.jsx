@@ -8,6 +8,9 @@ import AIGenerate from './pages/AIGenerate';
 import ProblemEditor from './pages/ProblemEditor';
 import ExamBuilder from './pages/ExamBuilder';
 import ExamCreate from './pages/ExamCreate';
+import AIHubExplorer from './pages/AIHubExplorer';
+import ConceptTagger from './pages/ConceptTagger';
+import ConceptGraph from './pages/ConceptGraph';
 
 function App() {
   return (
@@ -21,6 +24,9 @@ function App() {
           <Route path="editor/:id" element={<ProblemEditor />} />
           <Route path="exams" element={<ExamBuilder />} />
           <Route path="exams/new" element={<ExamCreate />} />
+          <Route path="aihub" element={<AIHubExplorer />} />
+          <Route path="concept-tagging" element={<ConceptTagger />} />
+          <Route path="concept-graph" element={<ConceptGraph />} />
         </Route>
       </Routes>
     </BrowserRouter>

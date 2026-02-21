@@ -10,7 +10,7 @@ export default function Dashboard() {
       axios.get('/api/problems'),
       axios.get('/api/exams'),
     ]).then(([s, p, e]) => {
-      setStats({ students: s.data.length, problems: p.data.length, exams: e.data.length });
+      setStats({ students: s.data.length, problems: p.data.total, exams: e.data.length });
     }).catch(() => {});
   }, []);
 

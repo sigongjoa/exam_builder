@@ -1,0 +1,15 @@
+=== Phase 4 개념 원자화 태깅 API 테스트 결과 ===
+테스트 일시: 2026-02-20
+
+[PASS] T1: GET /api/concepts → [] (빈 배열, 정상)
+[PASS] T2: GET /api/concepts/progress → {"tagged":0,"total":9940}
+[PASS] T3: POST /api/concepts {"name":"√x²=|x| 변환 규칙"} → id:1 생성됨
+[PASS] T4: POST /api/concepts (중복) → 기존 항목 반환 (INSERT OR IGNORE)
+[PASS] T5: GET /api/problems?tagged=0 → total:9940 (미태깅 필터)
+[PASS] T6: POST /api/problems/8482/concepts → {"success":true,"saved":1}
+[PASS] T7: GET /api/problems/8482/concepts → 태깅된 개념 1개 반환
+[PASS] T8: GET /api/concepts/progress → {"tagged":1,"total":9940} (업데이트 확인)
+[PASS] T9: GET /api/problems?tagged=1 → total:1 (태깅완료 필터)
+[SKIP] T10: POST /api/problems/8482/concepts/analyze → Ollama 꺼짐 (503 반환, 에러 처리 정상)
+
+결과 요약: 9/9 PASS (T10은 Ollama 의존성으로 SKIP)

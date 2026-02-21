@@ -6,6 +6,9 @@ const menuItems = [
   { to: '/problems', label: '문제 은행', icon: '📚' },
   { to: '/generate', label: 'AI 문제 생성', icon: '🤖' },
   { to: '/exams', label: '시험지 빌더', icon: '📝' },
+  { to: '/aihub', label: 'AI-Hub 데이터셋 리뷰', icon: '🔍' },
+  { to: '/concept-tagging', label: '개념 원자화 태깅', icon: '⚛️' },
+  { to: '/concept-graph', label: '개념 연결 그래프', icon: '🕸️' },
 ];
 
 export default function Layout() {
@@ -23,10 +26,9 @@ export default function Layout() {
               to={item.to}
               end={item.to === '/'}
               className={({ isActive }) =>
-                `flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${
-                  isActive
-                    ? 'bg-indigo-700 text-white font-semibold'
-                    : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'
+                `flex items-center gap-3 px-4 py-2.5 text-sm transition-colors ${isActive
+                  ? 'bg-indigo-700 text-white font-semibold'
+                  : 'text-indigo-200 hover:bg-indigo-800 hover:text-white'
                 }`
               }
             >

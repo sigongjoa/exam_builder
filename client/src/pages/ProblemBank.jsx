@@ -106,8 +106,9 @@ export default function ProblemBank() {
   // Function to render KaTeX, same as AIGenerate.jsx
   const renderKaTeX = (text) => {
     if (!text) return '';
-    return text.split(/(\\\(.+?\\\)|\\\[.+?\\\]|\$\$.+?\$\$)/g).map((part, index) => {
-      if (part.startsWith('\\(') && part.endsWith('\\)')) {
+    return text.split(/(\\\(.+?\\\)|\\\[[\s\S]+?\\\]|\$\$.+?\$\$|\$[^\$\n]+?\$)/gs).map((part, index) => {
+      if (typeof part !== 'string' || !part) return null; // Robust string check
+      if (part?.startsWith('\\(') && part?.endsWith('\\)')) {
         try {
           return <span key={index} dangerouslySetInnerHTML={{ __html: katex.renderToString(part.slice(2, -2), { throwOnError: false }) }} />;
         } catch (e) {
@@ -119,6 +120,10 @@ export default function ProblemBank() {
         } catch (e) {
           return <div key={index}>{part}</div>;
         }
+      } else if (part.startsWith('$') && part.endsWith('$') && !part.startsWith('$$')) {
+        try {
+          return <span key={index} dangerouslySetInnerHTML={{ __html: katex.renderToString(part.slice(1, -1), { throwOnError: false }) }} />;
+        } catch (e) { return <span key={index}>{part}</span>; }
       }
       return <span key={index}>{part}</span>;
     });
@@ -156,68 +161,97 @@ export default function ProblemBank() {
     let endPage = Math.min(totalPages, startPage + maxPageButtons - 1);
 
     if (endPage - startPage + 1 < maxPageButtons) {
-        startPage = Math.max(1, endPage - maxPageButtons + 1);
+      startPage = Math.max(1, endPage - maxPageButtons + 1);
     }
 
     if (startPage > 1) {
+      pageNumbers.push(
+        <button
+          key={1}
+          onClick={() => setPage(1)}
+          className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          1
+        </button>
+      );
+      if (startPage > 2) {
         pageNumbers.push(
-            <button
-                key={1}
-                onClick={() => setPage(1)}
-                className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-                1
-            </button>
+          <span key="ellipsis-start" className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+            ...
+          </span>
         );
-        if (startPage > 2) {
-            pageNumbers.push(
-                <span key="ellipsis-start" className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                    ...
-                </span>
-            );
-        }
+      }
     }
 
     for (let i = startPage; i <= endPage; i++) {
-        pageNumbers.push(
-            <button
-                key={i}
-                onClick={() => setPage(i)}
-                className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium ${
-                    i === page ? 'bg-indigo-50 border-indigo-500 text-indigo-600' : 'bg-white text-gray-700 hover:bg-gray-50'
-                }`}
-            >
-                {i}
-            </button>
-        );
+      pageNumbers.push(
+        <button
+          key={i}
+          onClick={() => setPage(i)}
+          className={`relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium ${i === page ? 'bg-indigo-50 border-indigo-500 text-indigo-600' : 'bg-white text-gray-700 hover:bg-gray-50'
+            }`}
+        >
+          {i}
+        </button>
+      );
     }
 
     if (endPage < totalPages) {
-        if (endPage < totalPages - 1) {
-            pageNumbers.push(
-                <span key="ellipsis-end" className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
-                    ...
-                </span>
-            );
-        }
+      if (endPage < totalPages - 1) {
         pageNumbers.push(
-            <button
-                key={totalPages}
-                onClick={() => setPage(totalPages)}
-                className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
-            >
-                {totalPages}
-            </button>
+          <span key="ellipsis-end" className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+            ...
+          </span>
         );
+      }
+      pageNumbers.push(
+        <button
+          key={totalPages}
+          onClick={() => setPage(totalPages)}
+          className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50"
+        >
+          {totalPages}
+        </button>
+      );
     }
 
     return pageNumbers;
-};
+  };
 
+
+  const handleDownload = async (e, problemIds, title = '문제은행_추출') => {
+    e.stopPropagation();
+    try {
+      const response = await axios.post(`${API_BASE_URL}/pdf/problems/bundle`, { problemIds, title }, { responseType: 'blob' });
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `${title}_bundle.zip`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+    } catch (err) {
+      alert('다운로드 중 오류가 발생했습니다.');
+      console.error(err);
+    }
+  };
 
   return (
     <div className="p-6 bg-gray-50 min-h-screen">
-      <h2 className="text-3xl font-extrabold text-gray-900 mb-8">문제 은행</h2>
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-3xl font-extrabold text-gray-900">문제 은행</h2>
+        {problems.length > 0 && (
+          <button
+            onClick={(e) => handleDownload(e, problems.map(p => p.id), `페이지_${page}_추출`)}
+            className="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg shadow-md font-semibold flex items-center gap-2 transition-colors"
+          >
+            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+              <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
+            </svg>
+            현재 페이지 전체 다운로드 (ZIP)
+          </button>
+        )}
+      </div>
 
       {error && (
         <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded relative mb-6" role="alert">
@@ -342,6 +376,16 @@ export default function ProblemBank() {
                 <div className="flex justify-between items-start mb-3">
                   <h4 className="text-lg font-bold text-gray-800">문제 #{problem.id}</h4>
                   <div className="flex space-x-2">
+                    {problem.is_image_verified === 1 ? (
+                      <span className="bg-green-100 text-green-800 px-2 py-0.5 rounded-full text-[10px] font-bold flex items-center gap-1">
+                        <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20"><path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" /></svg>
+                        AI 검증됨
+                      </span>
+                    ) : problem.image_path ? (
+                      <span className="bg-yellow-100 text-yellow-800 px-2 py-0.5 rounded-full text-[10px] font-bold">
+                        ⚠️ 검토 필요
+                      </span>
+                    ) : null}
                     {getDifficultyBadge(problem.difficulty)}
                     {getStatusBadge(problem.status)}
                   </div>
@@ -349,10 +393,24 @@ export default function ProblemBank() {
                 <div className="text-sm text-gray-600 mb-2">
                   <span className="font-medium">{problem.subject}</span> &gt; {problem.chapter_code}
                 </div>
+                {problem.image_path && (
+                  <div className="mb-3 bg-gray-100 rounded-lg overflow-hidden border border-gray-200">
+                    <img
+                      src={`/api/images/${problem.image_path}`}
+                      alt="문제 이미지"
+                      className="w-full h-32 object-contain hover:h-auto transition-all duration-300"
+                      onError={(e) => { e.target.style.display = 'none'; }}
+                    />
+                  </div>
+                )}
                 <div className="text-gray-900 leading-relaxed text-base line-clamp-3 mb-3">
                   {renderKaTeX(problem.question)}
                 </div>
                 <div className="flex gap-2" onClick={e => e.stopPropagation()}>
+                  <button onClick={(e) => handleDownload(e, [problem.id], `문제_${problem.id}`)}
+                    className="bg-green-500 hover:bg-green-600 text-white text-xs px-2.5 py-1 rounded font-medium">
+                    다운로드
+                  </button>
                   <button onClick={(e) => handleVariant(e, problem.id)}
                     className="bg-orange-500 hover:bg-orange-600 text-white text-xs px-2.5 py-1 rounded font-medium">
                     변형 생성

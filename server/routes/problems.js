@@ -41,6 +41,13 @@ const buildWhereClause = (params) => {
         values.push(`%${params.search}%`);
     }
 
+    // Tagged status filter: '0' for untagged, '1' for tagged
+    if (params.tagged === '0') {
+        conditions.push('problems.id NOT IN (SELECT DISTINCT problem_id FROM problem_concepts)');
+    } else if (params.tagged === '1') {
+        conditions.push('problems.id IN (SELECT DISTINCT problem_id FROM problem_concepts)');
+    }
+
     return {
         where: conditions.length > 0 ? 'WHERE ' + conditions.join(' AND ') : '',
         values: values

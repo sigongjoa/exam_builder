@@ -84,6 +84,27 @@ const createTables = () => {
       FOREIGN KEY (exam_id) REFERENCES exams(id),
       FOREIGN KEY (problem_id) REFERENCES problems(id)
     );
+
+    CREATE TABLE IF NOT EXISTS concepts (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT,
+      grade_level TEXT,
+      chapter_code TEXT,
+      use_count INTEGER DEFAULT 0,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+    );
+
+    CREATE TABLE IF NOT EXISTS problem_concepts (
+      problem_id INTEGER NOT NULL,
+      concept_id INTEGER NOT NULL,
+      ai_suggested INTEGER DEFAULT 0,
+      confirmed INTEGER DEFAULT 1,
+      created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+      PRIMARY KEY (problem_id, concept_id),
+      FOREIGN KEY (problem_id) REFERENCES problems(id),
+      FOREIGN KEY (concept_id) REFERENCES concepts(id)
+    );
   `;
 
   db.exec(schema);

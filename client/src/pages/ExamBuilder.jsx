@@ -26,6 +26,10 @@ export default function ExamBuilder() {
     window.open(`/api/pdf/${examId}?type=${type}`, '_blank');
   };
 
+  const downloadBundle = (examId) => {
+    window.open(`/api/pdf/${examId}/bundle`, '_blank');
+  };
+
   return (
     <div className="p-6">
       <div className="flex justify-between items-center mb-6">
@@ -54,17 +58,21 @@ export default function ExamBuilder() {
                 <div className="text-xs text-gray-400">{new Date(exam.created_at).toLocaleDateString('ko-KR')}</div>
               </div>
               <div className="flex flex-wrap gap-2">
+                <button onClick={() => downloadBundle(exam.id)}
+                  className="w-full bg-orange-500 hover:bg-orange-600 text-white text-xs px-3 py-2 rounded font-bold mb-1 shadow-sm transition-colors">
+                  일괄 다운로드 (ZIP)
+                </button>
                 <button onClick={() => downloadPDF(exam.id, 'exam')}
                   className="bg-indigo-500 hover:bg-indigo-600 text-white text-xs px-3 py-1.5 rounded font-medium">
-                  시험지 PDF
+                  시험지
                 </button>
                 <button onClick={() => downloadPDF(exam.id, 'answer')}
                   className="bg-green-500 hover:bg-green-600 text-white text-xs px-3 py-1.5 rounded font-medium">
-                  답안지 PDF
+                  답안지
                 </button>
                 <button onClick={() => downloadPDF(exam.id, 'solution')}
                   className="bg-purple-500 hover:bg-purple-600 text-white text-xs px-3 py-1.5 rounded font-medium">
-                  해설지 PDF
+                  해설지
                 </button>
                 <button onClick={() => handleDelete(exam.id)}
                   className="bg-red-500 hover:bg-red-600 text-white text-xs px-3 py-1.5 rounded font-medium">

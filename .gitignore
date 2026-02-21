@@ -7,3 +7,9 @@ node_modules/
 output.txt
 client/dist/
 30.*/
+
+# Temp test & debug files
+test_*.png
+screenshot_*.png
+sample_*.json
+*.zip
