@@ -1,0 +1,6 @@
+error: unknown variable: 문자는
+   ┌─ ../../../../../tmp/gak_test2.typ:72:25
+   │
+72 │ 다음 중 보기에서$underbrace(a)_(문자는 a, 치수는 1 인 항을 찾는다. )$와 동류항인 것을 모두 고른 것 \
+   │                                 ^^^^^^
+

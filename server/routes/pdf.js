@@ -34,6 +34,9 @@ function latexToTypst(text) {
       // \text{한국어} → "한국어" (Typst math mode uses double quotes for text)
       m = m.replace(/\\text\s*\{([^}]*)\}/g, '"$1"');
       m = m.replace(/\\mbox\s*\{([^}]*)\}/g, '"$1"');
+      m = m.replace(/\\mathrm\s*\{([^}]*)\}/g, '"$1"');
+      m = m.replace(/\\mathbf\s*\{([^}]*)\}/g, 'bold($1)');
+      m = m.replace(/~/g, ' ');  // LaTeX non-breaking space
       // Strip \left \right (Typst handles stretchy delimiters automatically)
       m = m.replace(/\\left\s*\(/g, '(').replace(/\\right\s*\)/g, ')');
       m = m.replace(/\\left\s*\[/g, '[').replace(/\\right\s*\]/g, ']');
@@ -88,9 +91,67 @@ function latexToTypst(text) {
   // inline=true: trim math parts so '$formula$' → Typst inline mode
   // inline=false (default): keep spaces so '$ formula $' → Typst display mode
   if (arguments[1] === true) {
-    return parts.map((p, i) => i % 2 === 1 ? p.trim() : p).join('$').replace(/\n/g, ' ');
+    return parts.map((p, i) => i % 2 === 1 ? p.trim().replace(/\n/g, ' ') : p.replace(/\n/g, ' \\\n')).join('$');
   }
-  return parts.join(' $ ').replace(/\n/g, ' ');
+  return parts.map((p, i) => i % 2 === 1 ? p.replace(/\n/g, ' ') : p.replace(/\n/g, ' \\\n')).join(' $ ');
+}
+
+function renderQuestionContent(question) {
+  if (!question) return '';
+  const rawBlocks = [];
+  const SFX = '\x00';
+  const PFX = '\x00TB';
+
+  // Step 1: Convert [[TABLE]]..[[/TABLE]] to Typst #table(...), store as raw blocks
+  let text = question.replace(/\[\[TABLE\]\]\n([\s\S]*?)\n\[\[\/TABLE\]\]/g, (match, tableContent) => {
+    const rows = tableContent.trim().split('\n');
+    if (rows.length === 0) return '';
+    const colCount = rows[0].split('|').length;
+    let tableSource = `#table(columns: ${colCount}, inset: 6pt, stroke: 0.5pt + black, align: center,\n`;
+    rows.forEach(row => {
+      row.split('|').forEach(cell => {
+        tableSource += `  [${latexToTypst(cell.trim(), true)}],\n`;
+      });
+    });
+    tableSource += `)`;
+    const idx = rawBlocks.push(tableSource) - 1;
+    return `${PFX}${idx}${SFX}`;
+  });
+
+  // Step 2: ㄴ,ㄷ,ㄹ,ㅁ 보기 항목 앞 줄바꿈
+  text = text
+    .replace(/([^\n])[ \t]+(ㄴ\.)/g, '$1\nㄴ.')
+    .replace(/([^\n])[ \t]+(ㄷ\.)/g, '$1\nㄷ.')
+    .replace(/([^\n])[ \t]+(ㄹ\.)/g, '$1\nㄹ.')
+    .replace(/([^\n])[ \t]+(ㅁ\.)/g, '$1\nㅁ.');
+
+  // Step 3: LaTeX → Typst (sentinels have no _, *, # so they survive unescaped)
+  let rendered = latexToTypst(text, true);
+
+  // Step 4: Restore raw Typst blocks
+  rawBlocks.forEach((block, idx) => {
+    rendered = rendered.split(`${PFX}${idx}${SFX}`).join(block);
+  });
+
+  return rendered;
+}
+
+function formatAnswer(answer, type, circles) {
+  if (type !== 'multiple_choice') return latexToTypst(String(answer), true);
+  const str = String(answer).trim();
+  // 복수 정답: '2,5' → '②⑤'
+  if (str.includes(',')) {
+    return str.split(',')
+      .map(s => s.trim())
+      .filter(s => /^[1-5]$/.test(s))
+      .map(s => circles[parseInt(s) - 1])
+      .join('');
+  }
+  // 단일 정답: '2' → '②'
+  const n = parseInt(str);
+  if (!isNaN(n) && n >= 1 && n <= 5) return circles[n - 1];
+  // fallback: 수식 텍스트 그대로
+  return latexToTypst(str, true);
 }
 
 /**
@@ -137,7 +198,9 @@ function buildExamTypst(exam, problems, options = {}) {
 
 // --- Header Section ---
 #block(width: 100%, stroke: (top: 4pt + black, bottom: 2pt + black), inset: (y: 8pt))[
-  #stack(dir: ltr, spacing: 1fr,
+  #grid(
+    columns: (1fr, auto, 1fr),
+    align: (left + horizon, center + horizon, right + horizon),
     [
       #if "${sheetTagText}" != "" {
         box(fill: ${sheetTagColor}, radius: 3pt, inset: 4pt, 
@@ -146,19 +209,15 @@ function buildExamTypst(exam, problems, options = {}) {
       }
     ],
     [
-      #align(center)[
-        #text(9pt, gray, tracking: 3pt)[${typeLabel}] \
-        #v(-4pt)
-        #text(21pt, weight: 900, tracking: 4pt)[${examTitle}] \
-        #v(-4pt)
-        #text(9pt, gray)[${date}]
-      ]
+      #text(9pt, gray, tracking: 3pt)[${typeLabel}] \
+      #v(-4pt)
+      #text(21pt, weight: 900, tracking: 4pt)[${examTitle}] \
+      #v(-4pt)
+      #text(9pt, gray)[${date}]
     ],
     [
-      #align(right + horizon)[
-        #text(9pt)[총 *${problems.length}*문제] \
-        #text(11pt)[*${exam.total_points || 0}*점]
-      ]
+      #text(9pt)[총 *${problems.length}*문제] \
+      #text(11pt)[*${exam.total_points || 0}*점]
     ]
   )
 ]
@@ -237,17 +296,21 @@ function buildExamTypst(exam, problems, options = {}) {
 
     let resultText = '';
     if (showAnswers) {
-      resultText += `\n#v(4pt)\n#block(width: 100%, fill: rgb("#fffbee"), stroke: (left: 3pt + orange), inset: 5pt)[*정답:* ${latexToTypst(String(p.answer))}]`;
+      const circles = ['①','②','③','④','⑤'];
+      const ansDisplay = formatAnswer(p.answer, p.type, circles);
+      resultText += `\n#v(4pt)\n#block(width: 100%, fill: rgb("#fffbee"), stroke: (left: 3pt + orange), inset: 5pt)[*정답:* ${ansDisplay}]`;
     }
     if (showSolutions && p.solution) {
-      resultText += `\n#v(4pt)\n#block(width: 100%, fill: rgb("#f5f3ff"), stroke: (left: 3pt + purple), inset: 5pt)[*풀이:* ${latexToTypst(p.solution)}]`;
+      resultText += `\n#v(4pt)\n#block(width: 100%, fill: rgb("#f5f3ff"), stroke: (left: 3pt + purple), inset: 5pt)[*풀이:* ${latexToTypst(p.solution, true)}]`;
     }
+
+    const renderedQ = renderQuestionContent(p.question);
 
     source += `
   [
     #stack(dir: ttb, spacing: 4pt,
       [#prob_num("${i + 1}") #h(4pt) #text(size: 8pt, gray)[[${points}점]] ${isDesc ? '#box(fill: red, radius: 2pt, inset: 2pt, text(white, size: 7pt, weight: "bold")[서술형])' : ''}],
-      [#text(size: 9.5pt)[${latexToTypst(p.question)}]],
+      [#text(size: 9.5pt)[${renderedQ}]],
       ${imageCmd ? `[${imageCmd}]` : '[]'},
       [${choicesText}],
       [${answerArea}],
@@ -263,6 +326,12 @@ function buildExamTypst(exam, problems, options = {}) {
   // For simplicity, we keep them in the grid for now as per original 2-column request.
 
   if (showAnswers && !showSolutions) {
+    const circles = ['①', '②', '③', '④', '⑤'];
+    const tableContent = problems.map((p, i) => {
+      const ans = formatAnswer(p.answer, p.type, circles);
+      return `[${i + 1}], [${ans}]`;
+    }).join(', ');
+
     source += `
 #v(1fr)
 #align(center)[
@@ -275,7 +344,7 @@ function buildExamTypst(exam, problems, options = {}) {
       stroke: 0.5pt + black,
       fill: (x, y) => if y == 0 { gray.lighten(90%) },
       [*번호*], [*정답*], [*번호*], [*정답*], [*번호*], [*정답*],
-      ${problems.map((p, i) => `[${i + 1}], [${latexToTypst(String(p.answer))}]`).join(', ')}
+      ${tableContent}
     )
   ]
 ]`;
